@@ -1,0 +1,58 @@
+{
+  "name": "aicards",
+  "version": "1.0.0",
+  "description": "Environment to train AI on card games.",
+  "main": "index.js",
+  "scripts": {
+    "dev": "ts-node-dev --project tsconfig.server.json --ignore-watch [\".next\",\"node_modules\"] ./express_api/index.ts",
+    "build": "node build.js",
+    "nextBuild": "next build",
+    "start": "ts-node --project tsconfig.server.json ./express_api/index.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alexandre-lavoie/aicards.git"
+  },
+  "keywords": [
+    "React",
+    "AI",
+    "Cards"
+  ],
+  "author": "Alexandre Lavoie",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/alexandre-lavoie/aicards/issues"
+  },
+  "homepage": "https://github.com/alexandre-lavoie/aicards#readme",
+  "dependencies": {
+    "@material-ui/core": "^4.9.7",
+    "@material-ui/icons": "^4.9.1",
+    "cors": "^2.8.5",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "framer-motion": "^1.10.2",
+    "isomorphic-unfetch": "^3.0.0",
+    "next": "9.3.6",
+    "react": "16.13.1",
+    "react-dom": "16.13.1",
+    "reflect-metadata": "^0.1.13",
+    "socket.io": "^2.3.0",
+    "socket.io-client": "^2.3.0",
+    "webpack": "^4.43.0"
+  },
+  "devDependencies": {
+    "@types/dotenv": "^8.2.0",
+    "@types/express": "^4.17.6",
+    "@types/node": "^13.13.4",
+    "@types/react": "^16.9.34",
+    "@types/react-dom": "^16.9.5",
+    "@types/react-router-dom": "^5.1.3",
+    "@types/socket.io": "^2.1.8",
+    "@types/socket.io-client": "^1.4.33",
+    "fs-extra": "^9.0.0",
+    "ignore-loader": "^0.1.2",
+    "ts-node": "^8.10.2",
+    "ts-node-dev": "^1.0.0-pre.44",
+    "typescript": "^3.8.3"
+  }
+}
