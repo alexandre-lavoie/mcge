@@ -1,20 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { Grid, Button, Dialog, DialogTitle, DialogActions, DialogContent, Typography } from '@material-ui/core';
+import { Grid } from '@material-ui/core';
 import { io } from '../_app';
 import { ICard, IGameState, IMove, IPrompt, IResponse } from '../../components/Interface';
-import PlayersCard from '../../components/PlayersCard';
 import PlayerDeck from '../../components/PlayerDeck';
+import WaitingPage from '../../components/game/WaitingPage';
+import EndPage from '../../components/game/EndPage';
+import InGamePopup from '../../components/InGamePopup';
 
 const GamePage: React.FC = () => {
     const [selectedCard, setSelectedCard] = useState<ICard | undefined>(undefined);
     const [gameState, setGameState] = useState<IGameState>({ phase: 'waiting', players: [], currentPlayer: null, centerHand: [] });
     const [prompt, setPrompt] = useState<IPrompt>({ id: '', title: '', content: '', options: [] });
-    const [shareLink, setShareLink] = useState('');
-
+    const [theme, setTheme] = useState<{[key: string]: string}>({});
+    const [buttons, setButtons] = useState<string[]>([]);
     const history = useRouter();
 
-    const selectCard = (event: React.MouseEvent<HTMLDivElement, MouseEvent> | undefined, card: ICard | undefined) => {
+    const selectCard = (card: ICard | undefined) => {
         if (selectedCard && card) {
             if (selectedCard.id != card.id) {
                 io.emit('move', { from: selectedCard, to: card } as IMove);
@@ -36,7 +38,9 @@ const GamePage: React.FC = () => {
 
         io.emit('joinRoom', room);
 
-        setShareLink(`${window.location.origin}/?room=${room}`)
+        io.emit('getTheme');
+
+        io.emit('getButtons');
 
         io.off('update').on('update', (gameState: IGameState) => {
             if (gameState == null || gameState.players.length == 0) {
@@ -46,10 +50,11 @@ const GamePage: React.FC = () => {
             }
         });
 
-        io.off('prompt').on('prompt', (prompt: IPrompt) => {
-            console.log(prompt);
-            setPrompt(prompt)
-        });
+        io.off('getTheme').on('getTheme', (theme: {[key: string]: string}) => setTheme(theme));
+
+        io.off('getButtons').on('getButtons', (buttons: string[]) => setButtons(buttons));
+
+        io.off('prompt').on('prompt', (prompt: IPrompt) => setPrompt(prompt));
 
         return () => {
             io.emit('leaveRoom');
@@ -58,35 +63,7 @@ const GamePage: React.FC = () => {
 
     switch (gameState.phase) {
         case "waiting":
-            return (
-                <div style={{ width: '100%', height: '100vh', overflow: 'hidden' }}>
-                    <Grid container alignItems='center' justify='center' direction='column' spacing={3} style={{ width: '100%', height: '100vh' }}>
-                        <Grid item>
-                            <PlayersCard players={gameState.players} />
-                        </Grid>
-                        <Grid container item justify='center' spacing={3}>
-                            <Grid item>
-                                <Button color='secondary' variant='contained' onClick={() => {
-                                    let input = document.getElementById('shareLink');
-                                    input?.removeAttribute('hidden');
-                                    (input as any).select();
-                                    document.execCommand('copy');
-                                    input?.setAttribute('hidden', 'true');
-                                }}>
-                                    Share
-                                </Button>
-                            </Grid>
-
-                            <Grid item>
-                                <Button color='primary' variant='contained' onClick={() => io.emit('start')}>
-                                    Start
-                                </Button>
-                            </Grid>
-                        </Grid>
-                    </Grid>
-                    <input hidden id="shareLink" value={shareLink} />
-                </div>
-            );
+            return <WaitingPage players={gameState.players} onStart={() => io.emit('start')} />
         case "started":
             let tempPlayers = [...gameState.players];
             let thisIndex = tempPlayers.findIndex(p => p.id == io.id);
@@ -99,23 +76,12 @@ const GamePage: React.FC = () => {
 
             return (
                 <>
-                    <Dialog
-                        open={prompt.id != ''}
-                    >
-                        <DialogTitle>{prompt.title}</DialogTitle>
-                        <DialogContent>
-                            <Typography>{prompt.content}</Typography>
-                        </DialogContent>
-                        <DialogActions>
-                            {
-                                prompt.options.map((option, index) => <Button key={index} onClick={() => promptResponse(option)}>{option}</Button>)
-                            }
-                        </DialogActions>
-                    </Dialog>
+                    <InGamePopup prompt={prompt} onResponse={(option: string) => promptResponse(option)} />
 
                     <Grid container direction='column' style={{ width: '100%', height: '100vh', overflow: 'hidden' }} spacing={3} justify='space-between'>
                         <Grid item>
                             {tempPlayers.map((player, index) => <PlayerDeck
+                                theme={theme}
                                 selectedCard={selectedCard}
                                 currentPlayer={gameState.currentPlayer}
                                 onClick={selectCard}
@@ -126,14 +92,21 @@ const GamePage: React.FC = () => {
 
                         <Grid container justify='center' item>
                             <Grid item>
-                                <PlayerDeck selectedCard={selectedCard} onClick={selectCard} alignItems='center' cards={gameState.centerHand} />
+                                <PlayerDeck 
+                                    theme={theme}
+                                    selectedCard={selectedCard} 
+                                    onClick={selectCard} 
+                                    alignItems='center' 
+                                    cards={gameState.centerHand} 
+                                />
                             </Grid>
                         </Grid>
 
                         <Grid item>
                             <PlayerDeck
-                                onPass={() => io.emit('pass')}
-                                hasPassButton={true}
+                                theme={theme}
+                                buttons={buttons}
+                                onButtonClick={button => io.emit('buttonClick', button)}
                                 selectedCard={selectedCard}
                                 currentPlayer={gameState.currentPlayer}
                                 onClick={selectCard} player={thisPlayer}
@@ -144,20 +117,7 @@ const GamePage: React.FC = () => {
             );
         default:
         case "end":
-            return (
-                <div style={{ width: '100%', height: '100vh', overflow: 'hidden' }}>
-                    <Grid container direction='column' alignItems='center' justify='center' style={{ width: '100%', height: '100vh' }} spacing={3}>
-                        <Grid item>
-                            <Typography variant='h3'>Game Over</Typography>
-                        </Grid>
-                        <Grid item>
-                            <Button onClick={() => history.push('/lobby')} variant='outlined'>
-                                Lobby
-                            </Button>
-                        </Grid>
-                    </Grid>
-                </div>
-            );
+            return <EndPage />
     }
 }
 

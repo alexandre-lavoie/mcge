@@ -31,9 +31,11 @@ export default class Server {
             socket.on('createRoom', gameName => {
                 let id = this.handleCreateRoom(gameName);
 
-                socket.emit('createRoom', {socket_id: socket.id, room: id});
+                if(id) {
+                    socket.emit('createRoom', {socket_id: socket.id, room: id});
 
-                socket.broadcast.emit('createRoom', {socket_id: socket.id, room: id});
+                    socket.broadcast.emit('createRoom', {socket_id: socket.id, room: id});
+                }
             });
 
             socket.on('setName', name => {
@@ -98,11 +100,17 @@ export default class Server {
     }
 
     public handleCreateRoom(gameName: string): string {
-        let room = new Room(this.io, this, this.getGame(gameName));
+        let game = this.getGame(gameName);
 
-        this.rooms.push(room);
+        if(game) {
+            let room = new Room(this.io, this, this.getGame(gameName));
 
-        return room.id;
+            this.rooms.push(room);
+    
+            return room.id;
+        } else {
+            return null;
+        }
     }
 
     public getGameNames(): string[] {
@@ -110,9 +118,13 @@ export default class Server {
     }
 
     public getGame(gameName: string): Game {
-        let game = require(`../games/${gameName}`).default;
-
-        return new game();
+        if(gameName != '') {
+            let game = require(`../games/${gameName}`).default;
+            
+            return new game();
+        } else {
+            return null;
+        }
     }
 
     public getRoomIDs() {

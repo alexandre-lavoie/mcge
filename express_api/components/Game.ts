@@ -3,103 +3,70 @@ import Card from "./Card";
 import { IGameState, IMove, ICard, IResponse } from '../../components/Interface';
 import CardCollection from "./CardCollection";
 import PlayerCollection from "./PlayerCollection";
+import fs from 'fs';
+import TableHand from "./TableHand";
+import CardHolder from "./CardHolder";
 
 export default abstract class Game {
 
     protected players: PlayerCollection;
     protected deck: CardCollection;
-    protected centerHand: CardCollection;
+    protected tableHand: TableHand;
     protected currentPlayer: Player;
     public phase: 'waiting' | 'started' | 'end';
 
-    public abstract getName(): string;
+    public abstract start(): void;
     public abstract getMinPlayers(): number;
     public abstract getMaxPlayers(): number;
     public abstract getHidesOtherPlayerCards(): boolean;
     public abstract getDrawSize(): number;
-    public abstract checkGameComplete(): boolean;
+    public abstract getGameComplete(): boolean;
     public abstract onPromptResponse(response: IResponse);
+    public abstract getThemePath(): string;
+    public abstract getButtons(): string[];
+    public abstract getDeck(): CardCollection;
+    public abstract onButtonClick(player: Player, button: string): boolean;
+    public abstract onAction(player: Player, from: CardHolder, to: CardHolder, cardFrom: Card, cardTo: Card): boolean;
 
     constructor() {
         this.players = new PlayerCollection([], this.getHidesOtherPlayerCards());
         this.currentPlayer = null;
         this.phase = 'waiting';
         this.deck = new CardCollection();
-        this.centerHand = new CardCollection();
+        this.tableHand = new TableHand();
     }
 
-    public start() {
-        this.phase = 'started';
-        this.onNewDeck();
-        this.centerHand.push(this.onDraw());
-        this.players.forEach(player => player.setHand(this.onNewHand()));
-        this.update();
-    }
-
-    public onMove(player: Player, move: IMove) {
-        if(this.phase == 'started') {
-            let { from, to } = move;
-
-            let fromPlayer = this.players.findPlayerWith(from);
-            let toPlayer = this.players.findPlayerWith(to);
-            let toCenter = this.centerHand.hasCard(to);
-            let fromCenter = this.centerHand.hasCard(from);
-    
-            if(this.currentPlayer == null) {
+    public onPlayerMove(player: Player, move: IMove) {
+        if (this.phase == 'started') {
+            if (this.currentPlayer == null) {
                 this.setNextPlayer();
             }
-    
-            if (this.canSwap(player, fromPlayer, toPlayer)) {
-                this.onSwap(player, from as Card, to as Card);
-    
-                this.update();
-            } else if (toCenter && this.canPlace(player, fromPlayer, from as Card, to as Card)) {
-                this.onPlace(fromPlayer, from);
-    
-                this.update();
-            } else if(fromCenter && this.canPickup(player, toPlayer)) {
-                this.onPickup(toPlayer, to);
-                
+
+            let { from, to } = move;
+
+            let fromCardHolder: CardHolder = this.players.findPlayerWith(from);
+            let toCardHolder: CardHolder = this.players.findPlayerWith(to);
+
+            if (this.tableHand.hasCard(from)) {
+                fromCardHolder = this.tableHand;
+            }
+
+            if (this.tableHand.hasCard(to)) {
+                toCardHolder = this.tableHand;
+            }
+
+            if (this.onAction(player, fromCardHolder, toCardHolder, fromCardHolder.getCards().find(from), toCardHolder.getCards().find(to))) {
                 this.update();
             }
         }
     }
 
-    public canPass(player: Player) {
-        return player.equals(this.currentPlayer);
-    }
-
-    public onPass(player: Player) {
-        this.setNextPlayer();
-    }
-
-    public canSwap(player: Player, fromPlayer: Player, toPlayer: Player) {
-        return fromPlayer != null && toPlayer != null && fromPlayer.equals(toPlayer) && player.equals(fromPlayer);
-    }
-
-    public onSwap(player: Player, cardFrom: Card, cardTo: Card) {
-        player.getHand().popInsert(cardFrom, cardTo);
-    }
-
-    public canPlace(player: Player, fromPlayer: Player, cardFrom: Card, cardTo: Card) {
-        return fromPlayer && player.equals(fromPlayer) && player.equals(this.currentPlayer);
-    }
-
-    public onPlace(player: Player, cardFrom: ICard) {
-        let card = player.getHand().remove(cardFrom);
-        this.centerHand.push(card);
-        player.draw(this.onDraw());
-        this.setNextPlayer();
-    }
-
-    public canPickup(player: Player, toPlayer: Player) {
-        return player.equals(toPlayer) && player.equals(this.currentPlayer);
-    }
-
-    public onPickup(player: Player, cardTo: ICard) {}
+    public getName(): string {
+        return Object.getPrototypeOf(this).constructor.name;
+    };
 
     public update() {
-        if(this.checkGameComplete()) {
+        if (this.getGameComplete()) {
             this.phase = 'end';
         }
 
@@ -111,10 +78,10 @@ export default abstract class Game {
     }
 
     public onPlayerJoin(player: Player) {
-        if(player) {
+        if (player) {
             this.players.add(player);
-    
-            if(this.phase != 'waiting' || this.getMaxPlayers() < this.players.getCount()) {
+
+            if (this.phase != 'waiting' || this.getMaxPlayers() < this.players.getCount()) {
                 player.isViewer = true;
             } else if (this.currentPlayer === null) {
                 this.setNextPlayer(player);
@@ -123,7 +90,7 @@ export default abstract class Game {
     }
 
     public onPlayerLeave(player: Player) {
-        if(player) {
+        if (player) {
             this.players.remove(player);
 
             player.isViewer = false;
@@ -140,14 +107,22 @@ export default abstract class Game {
         }
     }
 
-    public onNewDeck() {
-        let deck = new CardCollection();
+    public isCurrentPlayer(player: Player) {
+        return player.equals(this.currentPlayer);
+    }
 
-        for (let value of ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K']) {
-            for (let suit of ['♣', '♠', '♥', '♦']) {
-                deck.push(new Card([value, suit]));
-            }
+    protected performSwap(player: Player, from: CardHolder, to: CardHolder, cardFrom: Card, cardTo: Card): boolean {
+        if(from instanceof Player && to instanceof Player && player.equals(from) && player.equals(to)) {
+            from.getCards().popInsert(cardFrom, cardTo);
+
+            return true;
         }
+
+        return false;
+    }
+
+    public onNewDeck() {
+        let deck = this.getDeck();
 
         deck.shuffle();
 
@@ -176,13 +151,17 @@ export default abstract class Game {
         return {
             phase: this.phase,
             players: this.players.serialize(player),
-            centerHand: this.centerHand.serialize(false),
+            centerHand: this.tableHand.serialize(false),
             currentPlayer: (this.currentPlayer) ? this.currentPlayer.serialize(false) : null
         }
     }
 
     public getPlayers() {
         return this.players;
+    }
+
+    public getTheme(): object {
+        return require(this.getThemePath());
     }
 
     public getCurrentPlayer(): Player {
@@ -193,7 +172,7 @@ export default abstract class Game {
         return this.players.getCount();
     }
 
-    public setNextPlayer(player: Player=null, shift: number=1) {
+    public setNextPlayer(player: Player = null, shift: number = 1) {
         if (player == null) {
             this.currentPlayer = this.players.after(this.currentPlayer, shift);
         } else {

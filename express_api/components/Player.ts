@@ -2,8 +2,9 @@ import Room from "./Room";
 import Card from "./Card";
 import { IPlayer, ICard, IPrompt } from '../../components/Interface';
 import CardCollection from "./CardCollection";
+import CardHolder from "./CardHolder";
 
-export default class Player {
+export default class Player implements CardHolder {
 
     public id: string;
     public socket: SocketIO.Socket;
@@ -19,6 +20,10 @@ export default class Player {
         this.room = null;
         this.name = null;
         this.isViewer = false;
+    }
+
+    public getCards(): CardCollection {
+        return this.hand;
     }
 
     public sendPrompt(prompt: IPrompt) {
@@ -65,7 +70,7 @@ export default class Player {
         return this.hand;
     }
 
-    public equals(otherPlayer: Player) {
-        return otherPlayer && this.id == otherPlayer.id;
+    public equals(obj: object) {
+        return obj && obj instanceof Player && this.id == obj.id;
     }
 }

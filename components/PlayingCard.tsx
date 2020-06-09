@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Paper, Typography, Grid, Button } from '@material-ui/core';
 import { ICard } from './Interface';
 
 interface PropsPlayingCard {
     card?: ICard,
-    onClick?: ((event?: React.MouseEvent<HTMLDivElement, MouseEvent>) => void),
+    onClick?: (() => void),
     selected?: boolean,
-    isCurrentPlayer?: boolean
+    isCurrentPlayer?: boolean,
+    theme?: { [key: string]: string }
 }
 
 const PlayingCard: React.FC<PropsPlayingCard> = (props) => {
@@ -21,19 +22,11 @@ const PlayingCard: React.FC<PropsPlayingCard> = (props) => {
     }
 
     const getColor = () => {
-        switch(suit) {
-            case 'G':
-                return '#4AAA51';
-            case 'B':
-                return '#1B6DA9';
-            case 'R':
-                return '#F50057';
-            case 'Y':
-                return '#FFC107';
-            case 'B':
-            case '-':
-            default:
-                return 'none';
+        if(props.theme) {
+            let color = props.theme[suit];
+            return (color) ? color : 'none';
+        } else {
+            return 'none';
         }
     }
 
@@ -48,11 +41,11 @@ const PlayingCard: React.FC<PropsPlayingCard> = (props) => {
                     padding: '0.5em',
                     userSelect: 'none',
                     backgroundColor: getColor(),
-                    border: (props.selected || props.isCurrentPlayer) ? `0.1em solid ${(props.selected) ? 'red' : 'white'}` : '0'
+                    border: (props.selected || props.isCurrentPlayer) ? `0.25em solid ${(props.selected) ? 'red' : 'white'}` : '0'
                 }}
                 onMouseEnter={() => setHover(true)}
                 onMouseLeave={() => setHover(false)}
-                onClick={(e) => (props.onClick) ? props.onClick(e) : {}}
+                onClick={() => (props.onClick) ? props.onClick() : {}}
                 elevation={(hover || props.selected) ? 12 : 0}
             >
                 <Grid container direction='column' justify='space-between' style={{ height: '100%' }}>

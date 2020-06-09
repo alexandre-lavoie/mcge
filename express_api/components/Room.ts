@@ -19,19 +19,27 @@ export default class Room {
     }
 
     public addEventListeners(player: Player) {
+        player.socket.on('getTheme', () => player.socket.emit('getTheme', this.game.getTheme()));
+
+        player.socket.on('getButtons', () => player.socket.emit('getButtons', this.game.getButtons()));
+
         player.socket.on('move', (move: IMove) => {
-            this.game.onMove(player, move);
+            this.game.onPlayerMove(player, move);
         });
 
         player.socket.on('start', () => {
             if(this.game.phase == 'waiting' && this.game.getPlayerCount() >= this.game.getMinPlayers()) {
+                this.game.phase = 'started';
+
                 this.game.start();
+
+                this.game.update();
             }
         });
 
-        player.socket.on('pass', () => {
-            if(this.game.canPass(player)) {
-                this.game.onPass(player);
+        player.socket.on('buttonClick', button => {
+            if(this.game.onButtonClick(player, button)) {
+                this.game.update();
             }
         });
 
@@ -40,7 +48,9 @@ export default class Room {
         });
     }
 
-    public removeEventListeners(player: Player) {}
+    public removeEventListeners(player: Player) {
+        player.socket.removeAllListeners();
+    }
 
     public handlePlayerJoin(player: Player) {
         console.log(`Player ${player.id} joined room ${this.id}.`);

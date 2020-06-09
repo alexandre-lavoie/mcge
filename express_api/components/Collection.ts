@@ -33,7 +33,7 @@ export default abstract class Collection<T> {
         let i2 = this.findIndex(v2);
 
         if(i1 == -1 || i2 == -1) {
-            throw 'Could not find cards to swap';
+            throw 'Could not find cards to swap.';
         }
 
         this.collection[i1] = this.collection[i2];
@@ -67,6 +67,20 @@ export default abstract class Collection<T> {
         this.collection.splice(j + ((i > j) ? 0 : 1), 0, v1); 
     }
 
+    public pushWithOffset(index: number, element: T) {
+        this.collection.splice(index, 0, element);
+    }
+
+    public pushToOffsetElement(offset: T, element: T) {
+        let i = this.findIndex(offset);
+
+        if(i == -1) {
+            throw 'Could not find cards to push with offset.';
+        }
+
+        this.pushWithOffset(i, element);
+    }
+
     public pop() {
         return this.collection.pop();
     }
@@ -79,7 +93,7 @@ export default abstract class Collection<T> {
         return this.collection.shift();
     }
 
-    public find(e: T): T {
+    public find(e: any): T {
         return this.collection.find(c => this.elementEquals(e, c));
     }
 

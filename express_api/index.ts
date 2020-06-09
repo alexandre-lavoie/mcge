@@ -17,6 +17,8 @@ nextApp.prepare()
 
     const io = socketio(server);
 
+    app.use(express.static('public'));
+
     app.get('*', (req, res) => {
         return handle(req, res);
     });

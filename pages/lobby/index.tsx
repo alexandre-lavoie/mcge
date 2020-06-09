@@ -55,8 +55,8 @@ const LobbyPage: React.FC = () => {
                     </FormControl>
                 </DialogContent>
                 <DialogActions>
-                    <Button color='secondary' onClick={() => setDialog(false)}>Cancel</Button>
-                    <Button color='primary' onClick={() => {io.emit('createRoom', game); setDialog(false);}}>Create</Button>
+                    <Button onClick={() => setDialog(false)}>Cancel</Button>
+                    <Button onClick={() => {io.emit('createRoom', game); setDialog(false);}}>Create</Button>
                 </DialogActions>
             </Dialog>
 
