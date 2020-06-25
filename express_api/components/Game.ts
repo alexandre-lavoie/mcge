@@ -1,9 +1,8 @@
 import Player from "./Player";
 import Card from "./Card";
-import { IGameState, IMove, ICard, IResponse } from '../../components/Interface';
+import { IGameState, IMove, IResponse } from 'mcge';
 import CardCollection from "./CardCollection";
 import PlayerCollection from "./PlayerCollection";
-import fs from 'fs';
 import TableHand from "./TableHand";
 import CardHolder from "./CardHolder";
 
@@ -12,16 +11,15 @@ export default abstract class Game {
     protected players: PlayerCollection;
     protected deck: CardCollection;
     protected tableHand: TableHand;
-    protected currentPlayer: Player;
+    protected currentPlayer: Player | null;
     public phase: 'waiting' | 'started' | 'end';
-
     public abstract start(): void;
     public abstract getMinPlayers(): number;
     public abstract getMaxPlayers(): number;
     public abstract getHidesOtherPlayerCards(): boolean;
     public abstract getDrawSize(): number;
     public abstract getGameComplete(): boolean;
-    public abstract onPromptResponse(response: IResponse);
+    public abstract onPromptResponse(response: IResponse): void;
     public abstract getThemePath(): string;
     public abstract getButtons(): string[];
     public abstract getDeck(): CardCollection;
@@ -44,8 +42,8 @@ export default abstract class Game {
 
             let { from, to } = move;
 
-            let fromCardHolder: CardHolder = this.players.findPlayerWith(from);
-            let toCardHolder: CardHolder = this.players.findPlayerWith(to);
+            let fromCardHolder: CardHolder | undefined = this.players.findPlayerWith(from);
+            let toCardHolder: CardHolder | undefined = this.players.findPlayerWith(to);
 
             if (this.tableHand.hasCard(from)) {
                 fromCardHolder = this.tableHand;
@@ -55,8 +53,15 @@ export default abstract class Game {
                 toCardHolder = this.tableHand;
             }
 
-            if (this.onAction(player, fromCardHolder, toCardHolder, fromCardHolder.getCards().find(from), toCardHolder.getCards().find(to))) {
-                this.update();
+            if(fromCardHolder && toCardHolder) {
+                let fromCard = fromCardHolder.getCards().find(from);
+                let toCard = toCardHolder.getCards().find(to);
+    
+                if(fromCard && toCard) { 
+                    if (this.onAction(player, fromCardHolder, toCardHolder, fromCard, toCard)) {
+                        this.update();
+                    }
+                }
             }
         }
     }
@@ -133,7 +138,11 @@ export default abstract class Game {
         let deck = new CardCollection();
 
         for (let i = 0; i < this.getDrawSize(); i++) {
-            deck.push(this.onDraw());
+            let nextCard = this.onDraw();
+
+            if(nextCard) {
+                deck.push(nextCard);
+            }
         }
 
         return deck;
@@ -143,8 +152,8 @@ export default abstract class Game {
         if (this.deck.isEmpty()) {
             this.onNewDeck();
         }
-
-        return this.deck.pop();
+        
+        return this.deck.pop() as Card;
     }
 
     public getGameState(player: Player): IGameState {
@@ -164,7 +173,7 @@ export default abstract class Game {
         return require(this.getThemePath());
     }
 
-    public getCurrentPlayer(): Player {
+    public getCurrentPlayer(): Player | null {
         return this.currentPlayer;
     }
 
@@ -172,9 +181,13 @@ export default abstract class Game {
         return this.players.getCount();
     }
 
-    public setNextPlayer(player: Player = null, shift: number = 1) {
+    public setNextPlayer(player: (Player | null) = null, shift: number = 1) {
         if (player == null) {
-            this.currentPlayer = this.players.after(this.currentPlayer, shift);
+            if(this.currentPlayer == null) {
+                this.currentPlayer = this.players.toArray()[0];
+            } else {
+                this.currentPlayer = this.players.after(this.currentPlayer, shift);
+            }
         } else {
             this.currentPlayer = player;
         }

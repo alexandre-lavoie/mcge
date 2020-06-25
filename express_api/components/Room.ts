@@ -1,7 +1,7 @@
 import Game from './Game';
 import Player from './Player';
 import Server from './Server';
-import { IMove, IResponse } from '../../components/Interface';
+import { IMove, IResponse } from 'mcge';
 
 export default class Room {
     public id: string;
@@ -49,7 +49,7 @@ export default class Room {
     }
 
     public removeEventListeners(player: Player) {
-        player.socket.removeAllListeners();
+        //player.socket.removeAllListeners();
     }
 
     public handlePlayerJoin(player: Player) {

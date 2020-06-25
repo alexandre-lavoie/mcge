@@ -1,6 +1,6 @@
 import Room from "./Room";
 import Card from "./Card";
-import { IPlayer, ICard, IPrompt } from '../../components/Interface';
+import { IPlayer, ICard, IPrompt } from 'mcge';
 import CardCollection from "./CardCollection";
 import CardHolder from "./CardHolder";
 
@@ -9,7 +9,7 @@ export default class Player implements CardHolder {
     public id: string;
     public socket: SocketIO.Socket;
     private hand: CardCollection;
-    private room: Room;
+    private room: Room | null;
     public name: string;
     public isViewer: boolean;
 
@@ -18,7 +18,7 @@ export default class Player implements CardHolder {
         this.id = socket.id;
         this.hand = new CardCollection();
         this.room = null;
-        this.name = null;
+        this.name = '';
         this.isViewer = false;
     }
 
@@ -37,9 +37,11 @@ export default class Player implements CardHolder {
     }
 
     public leaveRoom() {
-        this.socket.leave(`room-${this.room.id}`);
+        if(this.room) {
+            this.socket.leave(`room-${this.room.id}`);
 
-        this.room = null;
+            this.room = null;
+        }
     }
 
     public draw(card: Card) {
@@ -55,7 +57,7 @@ export default class Player implements CardHolder {
     }
 
     public getRoom(): Room {
-        return this.room;
+        return this.room as Room;
     }
 
     public setHand(cards: CardCollection) {
@@ -70,7 +72,7 @@ export default class Player implements CardHolder {
         return this.hand;
     }
 
-    public equals(obj: object) {
+    public equals(obj: any) {
         return obj && obj instanceof Player && this.id == obj.id;
     }
 }

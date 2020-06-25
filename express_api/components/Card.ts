@@ -1,4 +1,4 @@
-import { ICard } from '../../components/Interface';
+import { ICard } from 'mcge';
 
 export default class Card {
     public id: string;

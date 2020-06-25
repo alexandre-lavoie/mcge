@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { IPlayer } from '../Interface';
+import { IPlayer } from 'mcge';
 import PlayersCard from '../PlayersCard';
 import { Grid, Button } from '@material-ui/core';
 

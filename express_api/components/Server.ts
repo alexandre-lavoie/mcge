@@ -67,7 +67,7 @@ export default class Server {
 
         const index = this.players.findIndex(player => player.id === socket.id);
 
-        console.log(`Player ${this.getPlayer(socket).id} left.`);
+        console.log(`Player ${this.getPlayer(socket)?.id} left.`);
 
         if(index >= 0) {
             this.players.splice(index, 1);
@@ -80,7 +80,7 @@ export default class Server {
         let player = this.getPlayer(socket);
         let room = this.getRoom(roomId);
 
-        if(room == null) {
+        if(room == null || player == null) {
             socket.emit('update', null);
         } else {
             room.handlePlayerJoin(player);
@@ -99,11 +99,11 @@ export default class Server {
         }
     }
 
-    public handleCreateRoom(gameName: string): string {
+    public handleCreateRoom(gameName: string): string | null {
         let game = this.getGame(gameName);
 
         if(game) {
-            let room = new Room(this.io, this, this.getGame(gameName));
+            let room = new Room(this.io, this, game);
 
             this.rooms.push(room);
     
@@ -114,12 +114,12 @@ export default class Server {
     }
 
     public getGameNames(): string[] {
-        return fs.readdirSync('./express_api/games');
+        return fs.readdirSync('./games');
     }
 
-    public getGame(gameName: string): Game {
+    public getGame(gameName: string): Game | null {
         if(gameName != '') {
-            let game = require(`../games/${gameName}`).default;
+            let game = require(`../../games/${gameName}`).default;
             
             return new game();
         } else {

@@ -10,10 +10,13 @@
         ],
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
-        "esModuleInterop": true
+        "esModuleInterop": true,
+        "downlevelIteration": true
     },
     "include": [
-        "express_api/**/*.ts"
+        "./types/global.d.ts",
+        "express_api/**/*.ts",
+        "games/**/*.ts"
     ],
     "exclude": [
         "node_modules",

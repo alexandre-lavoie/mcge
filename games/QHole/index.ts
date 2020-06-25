@@ -1,17 +1,17 @@
-import Game from "../../components/Game";
-import Player from "../../components/Player";
-import { IResponse } from "../../../components/Interface";
-import CardCollection from "../../components/CardCollection";
-import Card from "../../components/Card";
-import CardHolder from "../../components/CardHolder";
-import TableHand from "../../components/TableHand";
+import Game from "../../express_api/components/Game";
+import Player from "../../express_api/components/Player";
+import { IResponse, IGameState, ICard } from "mcge";
+import CardCollection from "../../express_api/components/CardCollection";
+import Card from "../../express_api/components/Card";
+import CardHolder from "../../express_api/components/CardHolder";
+import TableHand from "../../express_api/components/TableHand";
 
 export default class QHole extends Game {
 
-    public static readonly JOKER = '🃏';
+    public static readonly JOKER = '🤡';
     public static readonly CARD_ORDER = ['3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A', '2', QHole.JOKER];
-    private roundStartingPlayer: Player;
-    private roundWinningPlayer: Player;
+    private roundStartingPlayer: Player | null;
+    private roundWinningPlayer: Player | null;
     
     constructor() {
         super();
@@ -36,7 +36,7 @@ export default class QHole extends Game {
     }
 
     public getGameComplete(): boolean {
-        return this.phase == 'started' && this.players.toArray().every(player => player.getHand().getCount() == 0 || player.isViewer);
+        return this.phase == 'started' && this.players.toArray().some(player => player.getHand().getCount() == 0 || player.isViewer);
     }
     public onPromptResponse(response: IResponse) { }
 
@@ -51,6 +51,22 @@ export default class QHole extends Game {
         this.onNewDeck();
         this.players.forEach(player => player.setHand(this.onNewHand()));
         this.nextRound();
+    }
+
+    public getGameState(player: Player): IGameState {
+        let tableCards = this.tableHand.getCards();
+        let emptyCardIndex = tableCards.findIndex(Card.empty());
+        let centerHand: ICard[] = [];
+
+        tableCards.toArray().slice(0, emptyCardIndex).forEach(card => centerHand.push(card.serialize(false)));
+        tableCards.toArray().slice(emptyCardIndex).forEach(card => centerHand.push(card.serialize(!player.equals(this.currentPlayer))));
+
+        return {
+            phase: this.phase,
+            players: this.players.serialize(player),
+            centerHand: centerHand,
+            currentPlayer: (this.currentPlayer) ? this.currentPlayer.serialize(false) : null
+        }
     }
 
     public onAction(player: Player, from: CardHolder, to: CardHolder, cardFrom: Card, cardTo: Card): boolean {
@@ -74,7 +90,7 @@ export default class QHole extends Game {
         // If we are playing on table and we are current player.
         if (from instanceof Player && to instanceof TableHand && player.equals(from) && this.isCurrentPlayer(player)) {
             // Add card to table.
-            let card = from.getCards().remove(cardFrom);
+            let card = from.getCards().remove(cardFrom) as Card;
             to.getCards().pushWithOffset(Math.max(to.getCards().findIndex(cardTo), to.getCards().findIndex(Card.empty()) + 1), card);
 
             return true;
@@ -86,7 +102,7 @@ export default class QHole extends Game {
 
             if (from.getCards().findIndex(cardFrom) > emptyIndex) {
                 // Remove card from table.
-                let card = from.getCards().remove(cardFrom);
+                let card = from.getCards().remove(cardFrom) as Card;
                 to.getCards().pushToOffsetElement(cardTo, card);
 
                 return true;
@@ -105,8 +121,8 @@ export default class QHole extends Game {
             }
         }
 
-        deck.push(new Card([QHole.JOKER, 'R']));
-        deck.push(new Card([QHole.JOKER, 'B']));
+        deck.push(new Card([QHole.JOKER, '']));
+        deck.push(new Card([QHole.JOKER, '']));
 
         return deck;
     }
@@ -114,6 +130,8 @@ export default class QHole extends Game {
         switch (button) {
             case 'next':
                 return player.equals(this.currentPlayer);
+            default:
+                return false;
         }
     }
 
@@ -153,7 +171,7 @@ export default class QHole extends Game {
                     if (emptyCardIndex > 0) {
                         this.setNextPlayer();
 
-                        if (this.currentPlayer.equals(this.roundStartingPlayer)) {
+                        if (this.currentPlayer && this.currentPlayer.equals(this.roundStartingPlayer)) {
                             this.nextRound();
                         }
 
@@ -163,11 +181,18 @@ export default class QHole extends Game {
                     }
                 }
 
-                if (emptyCardIndex > 0 && 
-                    QHole.CARD_ORDER.findIndex(v => v == value) < QHole.CARD_ORDER.findIndex(v => v == this.tableHand.toArray()[0].value[0]) &&
-                    (value == QHole.JOKER || (value == '2' && cardSlice.length == emptyCardIndex - 1) || cardSlice.length == emptyCardIndex)
-                ) {
-                    return false;
+                if(emptyCardIndex > 0 && value != QHole.JOKER) {
+                    if(QHole.CARD_ORDER.findIndex(v => v == value) <= QHole.CARD_ORDER.findIndex(v => v == this.tableHand.toArray()[0].value[0])) {
+                        return false;
+                    }
+
+                    if(value == '2') {
+                        if(cardSlice.length != emptyCardIndex - 1) {
+                            return false;
+                        }
+                    } else if(cardSlice.length != emptyCardIndex) {
+                        return false;
+                    }
                 }
 
                 for (let i = 0; i <= emptyCardIndex; i++) {
@@ -180,7 +205,7 @@ export default class QHole extends Game {
 
                 this.setNextPlayer();
 
-                if (this.currentPlayer.equals(this.roundStartingPlayer)) {
+                if (this.currentPlayer && this.currentPlayer.equals(this.roundStartingPlayer)) {
                     this.nextRound();
                 }
 

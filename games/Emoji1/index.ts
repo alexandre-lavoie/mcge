@@ -1,10 +1,10 @@
-import Game from "../../components/Game";
-import CardCollection from "../../components/CardCollection";
-import Card from "../../components/Card";
-import Player from "../../components/Player";
-import { IResponse } from "../../../components/Interface";
-import CardHolder from "../../components/CardHolder";
-import TableHand from "../../components/TableHand";
+import Game from "../../express_api/components/Game";
+import CardCollection from "../../express_api/components/CardCollection";
+import Card from "../../express_api/components/Card";
+import Player from "../../express_api/components/Player";
+import CardHolder from "../../express_api/components/CardHolder";
+import TableHand from "../../express_api/components/TableHand";
+import { IResponse } from 'mcge';
 
 export default class Emoji1 extends Game {
 
@@ -49,13 +49,16 @@ export default class Emoji1 extends Game {
 
         let nextCard = this.onDraw();
 
-        while (nextCard.value[1] == Emoji1.BLACK) {
+        while (nextCard && nextCard.value[1] == Emoji1.BLACK) {
             this.deck.pushFront(nextCard);
 
             nextCard = this.onDraw();
         }
 
-        this.tableHand.push(nextCard);
+        if(nextCard) {
+            this.tableHand.push(nextCard);
+        }
+        
         this.players.forEach(player => player.setHand(this.onNewHand()));
     }
 
@@ -120,7 +123,7 @@ export default class Emoji1 extends Game {
     }
 
     public onAction(player: Player, from: CardHolder, to: CardHolder, cardFrom: Card, cardTo: Card): boolean {
-        if(this.performSwap(player, from, to, cardFrom, cardTo)) {
+        if (this.performSwap(player, from, to, cardFrom, cardTo)) {
             return true;
         }
 
@@ -128,7 +131,7 @@ export default class Emoji1 extends Game {
         if (to instanceof TableHand && player.equals(from) && this.isCurrentPlayer(player)) {
             // If either the value or the suit of the places card equals to the placed card.
             if (cardFrom.value[0] == cardTo.value[0] || cardFrom.value[1] == cardTo.value[1] || cardFrom.value[1] == Emoji1.BLACK) {
-                let card = player.getHand().remove(cardFrom);
+                let card = player.getHand().remove(cardFrom) as Card;
                 this.tableHand.push(card);
                 this.tableHand.shift();
 
@@ -140,12 +143,17 @@ export default class Emoji1 extends Game {
                             this.players.after(this.currentPlayer).drawMany(new CardCollection([this.onDraw(), this.onDraw(), this.onDraw(), this.onDraw()]));
                         }
                     case '🌈':
-                        this.currentPlayer.sendPrompt({
-                            id: (cardFrom.value[0] == '4️⃣') ? 'changeColor4' : 'changeColor',
-                            title: 'Change Color',
-                            content: 'Pick a color from the list below.',
-                            options: Emoji1.COLORS
-                        });
+                        if(this.currentPlayer) {
+                            this.currentPlayer.sendPrompt({
+                                id: (cardFrom.value[0] == '4️⃣') ? 'changeColor4' : 'changeColor',
+                                title: 'Change Color',
+                                content: 'Pick a color from the list below.',
+                                options: Emoji1.COLORS
+                            });
+                        } else {
+                            return false;
+                        }
+
                         break;
                     case '2️⃣':
                         if (this.direction) {
@@ -180,12 +188,16 @@ export default class Emoji1 extends Game {
         return false;
     }
 
-    public setNextPlayer(player: Player = null, shift: number = 1) {
+    public setNextPlayer(player: (Player | null) = null, shift: number = 1) {
         if (player == null) {
-            if (this.direction) {
-                this.currentPlayer = this.players.before(this.currentPlayer, shift);
+            if(this.currentPlayer) {
+                if (this.direction) {
+                    this.currentPlayer = this.players.before(this.currentPlayer, shift);
+                } else {
+                    this.currentPlayer = this.players.after(this.currentPlayer, shift);
+                }
             } else {
-                this.currentPlayer = this.players.after(this.currentPlayer, shift);
+                this.currentPlayer = this.players.toArray()[0];
             }
         } else {
             this.currentPlayer = player;

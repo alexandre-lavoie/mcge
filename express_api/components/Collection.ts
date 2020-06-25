@@ -62,9 +62,15 @@ export default abstract class Collection<T> {
 
     public popInsert(v1: T, v2: T) {
         let i = this.findIndex(v1);
-        v1 = this.remove(v1);
         let j = this.findIndex(v2);
-        this.collection.splice(j + ((i > j) ? 0 : 1), 0, v1); 
+
+        if(i > -1 && j > -1) {
+            let temp = this.remove(v1);
+
+            if(temp) {
+                this.collection.splice(j + ((i > j) ? 0 : 1), 0, temp); 
+            }
+        }
     }
 
     public pushWithOffset(index: number, element: T) {
@@ -81,6 +87,10 @@ export default abstract class Collection<T> {
         this.pushWithOffset(i, element);
     }
 
+    public append(collection: Collection<T>) {
+        collection.toArray().forEach(e => this.push(e));
+    }
+
     public pop() {
         return this.collection.pop();
     }
@@ -93,7 +103,7 @@ export default abstract class Collection<T> {
         return this.collection.shift();
     }
 
-    public find(e: any): T {
+    public find(e: any): T | undefined {
         return this.collection.find(c => this.elementEquals(e, c));
     }
 
@@ -113,7 +123,7 @@ export default abstract class Collection<T> {
         this.collection.forEach(callbackfn, thisArg);
     }
 
-    public after(e: T, shift: number=1): T {
+    public after(e: T, shift: number=1): T | null {
         let index = this.findIndex(e);
 
         if (index >= 0) {
@@ -123,7 +133,7 @@ export default abstract class Collection<T> {
         }
     }
 
-    public before(e: T, shift: number=1): T {
+    public before(e: T, shift: number=1): T | null {
         let index = this.findIndex(e);
 
         if (index >= 0) {
@@ -139,7 +149,7 @@ export default abstract class Collection<T> {
         }
     }
 
-    public remove(e: any): T {
+    public remove(e: any): T | null {
         let index = this.findIndex(e);
 
         if(index >= 0) {

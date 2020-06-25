@@ -19,14 +19,17 @@
       "resolveJsonModule": true,
       "isolatedModules": true,
       "noEmit": true,
-      "jsx": "preserve"
+      "jsx": "preserve",
+      "downlevelIteration": true
     },
     "exclude": [
       "node_modules",
-      "express_api/*"
+      "express_api/*",
+      "games/*"
     ],
     "include": [
       "next-env.d.ts",
+      "./types/global.d.ts",
       "**/*.ts",
       "**/*.tsx"
     ]

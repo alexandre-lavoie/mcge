@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardHeader, CardContent, List, ListItem, ListItemText } from '@material-ui/core';
-import { IPlayer } from './Interface';
+import { IPlayer } from 'mcge';
 
 const PlayersCard: React.FC<{ players: IPlayer[], style?: React.CSSProperties }> = (props) => {
     return (

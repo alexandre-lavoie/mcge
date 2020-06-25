@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { Grid } from '@material-ui/core';
 import { io } from '../_app';
-import { ICard, IGameState, IMove, IPrompt, IResponse } from '../../components/Interface';
+import { ICard, IGameState, IMove, IPrompt, IResponse } from 'mcge';
 import PlayerDeck from '../../components/PlayerDeck';
 import WaitingPage from '../../components/game/WaitingPage';
 import EndPage from '../../components/game/EndPage';

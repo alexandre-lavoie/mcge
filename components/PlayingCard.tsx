@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Paper, Typography, Grid, Button } from '@material-ui/core';
-import { ICard } from './Interface';
+import { ICard } from 'mcge';
 
 interface PropsPlayingCard {
     card?: ICard,
@@ -52,7 +52,7 @@ const PlayingCard: React.FC<PropsPlayingCard> = (props) => {
                     <Grid container item xs>
                         <Grid container item xs={6}>
                             <Grid item>
-                                <Typography variant="h6">{value}</Typography>
+                                <Typography variant="h6">{suit}</Typography>
                             </Grid>
                         </Grid>
                         <Grid container item xs={6} justify="flex-end">
@@ -74,7 +74,7 @@ const PlayingCard: React.FC<PropsPlayingCard> = (props) => {
                         </Grid>
                         <Grid container item xs={6} justify="flex-end">
                             <Grid item>
-                                <Typography variant="h6">{value}</Typography>
+                                <Typography variant="h6">{suit}</Typography>
                             </Grid>
                         </Grid>
                     </Grid>

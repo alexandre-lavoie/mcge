@@ -1,6 +1,6 @@
 import React from 'react';
 import { Dialog, DialogTitle, DialogActions, DialogContent, Typography, Button } from '@material-ui/core';
-import { IPrompt } from './Interface';
+import { IPrompt } from 'mcge';
 
 interface PropsInGamePopup {
     prompt: IPrompt,
@@ -18,7 +18,7 @@ const InGamePopup: React.FC<PropsInGamePopup> = (props) => {
             </DialogContent>
             <DialogActions>
                 {
-                    props.prompt.options.map((option, index) => <Button key={index} onClick={() => props.onResponse(option)}>{option}</Button>)
+                    props.prompt.options.map((option: string, index: number) => <Button key={index} onClick={() => props.onResponse(option)}>{option}</Button>)
                 }
             </DialogActions>
         </Dialog>

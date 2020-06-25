@@ -1,5 +1,5 @@
 import Card from "./Card";
-import { ICard } from "../../components/Interface";
+import { ICard } from 'mcge';
 import Collection from "./Collection";
 
 export default class CardCollection extends Collection<Card> {
@@ -11,7 +11,7 @@ export default class CardCollection extends Collection<Card> {
         return this.findIndex(card as Card) >= 0;
     }
 
-    public draw(): Card {
+    public draw(): Card | undefined {
         return this.pop();
     }
 

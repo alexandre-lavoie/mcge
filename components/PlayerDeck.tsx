@@ -1,6 +1,6 @@
 import React from 'react';
 import { Grid, Button, Typography } from '@material-ui/core';
-import { IPlayer, ICard } from './Interface';
+import { IPlayer, ICard } from 'mcge';
 import PlayingCard from './PlayingCard';
 
 interface PropsPlayerDeck {

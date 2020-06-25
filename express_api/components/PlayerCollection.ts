@@ -1,5 +1,5 @@
 import Player from "./Player";
-import { IPlayer, ICard, IGameState } from "../../components/Interface";
+import { IPlayer, ICard, IGameState } from "mcge";
 import Card from "./Card";
 import Collection from "./Collection";
 
@@ -11,7 +11,7 @@ export default class PlayerCollection extends Collection<Player> {
         this.hidesPlayerCards = hidesPlayerCards;
     }
 
-    public findPlayerWith(card: Card | ICard): Player {
+    public findPlayerWith(card: Card | ICard): Player | undefined {
         return this.collection.find(player => player.hasCard(card));
     }
 
@@ -22,10 +22,10 @@ export default class PlayerCollection extends Collection<Player> {
     public serialize(player?: Player): IPlayer[] {
         let hidden = this.hidesPlayerCards && player != undefined && !player.isViewer;
 
-        return this.filter(p => !p.isViewer).map(other => other.serialize(hidden && !player.equals(other)));
+        return this.filter(p => !p.isViewer).map(other => other.serialize(hidden && !other.equals(player)));
     }
 
-    public after(player: Player, shift: number=1): Player {
+    public after(player: (Player | null), shift: number=1): Player {
         const players = this.collection.filter(p => !p.isViewer);
 
         if(!player) {
@@ -41,7 +41,7 @@ export default class PlayerCollection extends Collection<Player> {
         }
     }
 
-    public before(player: Player, shift: number=1): Player {
+    public before(player: (Player | null), shift: number=1): Player {
         const players = this.collection.filter(p => !p.isViewer);
 
         if(!player) {
