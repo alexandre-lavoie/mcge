@@ -18,7 +18,7 @@ const LandingPage: React.FC = () => {
             spacing={6}
         >
             <Grid item>
-                <Typography variant="h1">AICards</Typography>
+                <Typography variant="h1">MCGE</Typography>
             </Grid>
             <Grid item>
                 <TextField value={name} label="Name" variant="outlined" onChange={(e) => setName(e.target.value)} />
