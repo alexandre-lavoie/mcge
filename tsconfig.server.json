@@ -2,7 +2,7 @@
     "compilerOptions": {
         "target": "es2016",
         "module": "commonjs",
-        "outDir": "server_package",
+        "outDir": "build",
         "skipLibCheck": true,
         "lib": [
             "es2016",
@@ -11,12 +11,14 @@
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
         "esModuleInterop": true,
-        "downlevelIteration": true
+        "downlevelIteration": true,
+        "resolveJsonModule": true
     },
     "include": [
-        "./types/global.d.ts",
+        "mcge.d.ts",
         "express_api/**/*.ts",
-        "games/**/*.ts"
+        "games/**/*.ts",
+        "games/**/*.json"
     ],
     "exclude": [
         "node_modules",

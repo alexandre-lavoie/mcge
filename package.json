@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "ts-node-dev --project tsconfig.server.json --ignore-watch [\".next\",\"node_modules\"] ./express_api/index.ts",
     "build": "node build.js",
-    "nextBuild": "next build",
+    "prod": "ts-node --project tsconfig.server.json ./express_api/prod.ts",
+    "nextBuild": "next build && next export",
+    "nextExport": "next export",
+    "expressBuild": "tsc --project tsconfig.server.json",
     "start": "ts-node --project tsconfig.server.json ./express_api/index.ts"
   },
   "repository": {

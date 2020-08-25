@@ -14,5 +14,12 @@ module.exports = {
         }));
 
         return config;
+    },
+    exportPathMap: () => {
+        return {
+            '/': { page: '/' },
+            '/lobby': { page: '/lobby' },
+            '/game': { page: '/game' }
+        }
     }
 }

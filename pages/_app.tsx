@@ -21,6 +21,7 @@ export default class MyApp extends App {
         return (
             <ThemeProvider theme={theme}>
                 <Head>
+                    <title>MCGE</title>
                     <link rel="shortcut icon" href="/favicon.png" />
                 </Head>
                 <CssBaseline />
